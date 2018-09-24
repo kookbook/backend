@@ -1,0 +1,81 @@
+# Welcome to Serverless!
+#
+# For full config options, check the docs:
+#    docs.serverless.com
+#
+# Happy Coding!
+
+service: kookbook
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  stage: dev
+  region: eu-central-1
+  profile: playground
+  tags:
+    project: kookbook
+    creator: Peter Pult
+
+
+functions:
+  recipes:
+    handler: recipes.handler
+    description: Handles CRUD for recipes.
+    events:
+      - http: post recipes
+      - http: get recipes/{recipeId}
+      - http: put recipes/{recipeId}
+      - http: delete recipes/{recipeId}
+
+  users:
+    handler: users.handler
+    description: Handles CRUD for users.
+    events:
+      - http: post users
+      - http: get users/{userId}
+      - http: put users/{userId}
+      - http: delete users/{userId}
+
+  kookbooks:
+    handler: kookbooks.handler
+    description: Handles CRUD for kookbooks.
+    events:
+      - http: post users/{userId}/kookbooks
+      - http: get users/{userId}/kookbooks/{kookbookId}
+      - http: put users/{userId}/kookbooks/{kookbookId}
+      - http: delete users/{userId}/kookbooks/{kookbookId}
+
+  links:
+    handler: links.handler
+    description: Handles creation for links.
+    events:
+      - http: post links
+
+  getHtml:
+    handler: getHtml.handler
+    description: Handle link adding.
+    events:
+      - sqs:
+        arn:
+          Fn::GetAtt: getHtmlQueue.Arn
+
+  parseHtml:
+    handler: parseHtml.handler
+    description: Handle link parsing.
+    events:
+      - sqs:
+        arn:
+          Fn::GetAtt: parseHtmlQueue.Arn
+
+
+resources:
+  Resources:
+    getHtmlQueue:
+      Type: 'AWS::SQS::Queue'
+      Properties:
+        QueueName: '${self:service}-${self:provider.stage}-getHtmlQueue'
+    parseHtmlQueue:
+      Type: 'AWS::SQS::Queue'
+      Properties:
+        QueueName: '${self:service}-${self:provider.stage}-parseHtmlQueue'
