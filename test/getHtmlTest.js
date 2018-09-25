@@ -11,7 +11,8 @@ describe('getHtml.handler', () => {
     };
     getHtml.handler(request, undefined, (error, response) => {
       assert.equal(200, response.statusCode);
-      assert.include(response.body, 'Example Domain');
+      assert.include(response.body.html, 'Example Domain');
+      assert.equal('http://example.org', response.body.sourceUrl);
       done();
     });
   });

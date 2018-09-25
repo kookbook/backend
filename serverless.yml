@@ -48,21 +48,21 @@ functions:
 
   links:
     handler: links.handler
-    description: Handles creation for links.
+    description: Handles link adding.
     events:
       - http: post links
 
   getHtml:
     handler: lib/getHtml.handler
-    description: Handle link adding.
+    description: Get raw HTML code from url.
     events:
       - sqs:
         arn:
           Fn::GetAtt: getHtmlQueue.Arn
 
   parseHtml:
-    handler: parseHtml.handler
-    description: Handle link parsing.
+    handler: lib/parseHtml.handler
+    description: Parse raw HTML code to recipe object.
     events:
       - sqs:
         arn:
