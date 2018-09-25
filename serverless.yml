@@ -53,7 +53,7 @@ functions:
       - http: post links
 
   getHtml:
-    handler: getHtml.handler
+    handler: lib/getHtml.handler
     description: Handle link adding.
     events:
       - sqs:
