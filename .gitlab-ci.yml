@@ -1,5 +1,8 @@
 image: node:8
-
+job:
+  tags:
+    - node
+    
 before_script:
   - npm install
 
