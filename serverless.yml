@@ -67,7 +67,7 @@ functions:
       - sqs:
         arn:
           Fn::GetAtt: parseHtmlQueue.Arn
-
+          
 
 resources:
   Resources:
