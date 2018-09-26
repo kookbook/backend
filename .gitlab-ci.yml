@@ -1,8 +1,5 @@
 image: node:8
-job:
-  tags:
-    - node
-    
+
 before_script:
   - npm install
 
@@ -13,3 +10,5 @@ cache:
 test:
   script:
     -npm test
+  tags:
+    - node
