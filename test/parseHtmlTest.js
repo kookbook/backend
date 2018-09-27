@@ -12,7 +12,6 @@ describe('parseHtml.handler', () => {
       httpMethod: 'POST'
     };
     parseHtml.handler(request, undefined, (error, response) => {
-      console.log(response);
       assert.equal('Erdbeertiramisu', response.body.title);
       assert.equal(9, response.body.ingredients.length);
       done();

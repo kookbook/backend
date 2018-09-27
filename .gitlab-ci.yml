@@ -9,6 +9,6 @@ cache:
 
 test:
   script:
-    -npm test
+    - npm test
   tags:
     - node
