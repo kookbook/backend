@@ -12,10 +12,21 @@ provider:
   runtime: nodejs8.10
   stage: dev
   region: eu-central-1
-  profile: playground
+  profile: netlight
   tags:
     project: kookbook
     creator: Peter Pult
+  iamRoleStatements:
+    - Effect: 'Allow'
+      Action:
+        - 'sqs:SendMessage'
+      Resource:
+        Fn::GetAtt: getHtmlQueue.Arn
+
+
+custom:
+  getHtmlQueueName: '${self:service}-${self:provider.stage}-getHtmlQueue'
+  parseHtmlQueueName: '${self:service}-${self:provider.stage}-parseHtmlQueue'
 
 
 functions:
@@ -47,8 +58,11 @@ functions:
       - http: delete users/{userId}/kookbooks/{kookbookId}
 
   links:
-    handler: links.handler
+    handler: lib/links.handler
     description: Handles link adding.
+    environment:
+      SQS_URL:
+        Ref: getHtmlQueue
     events:
       - http: post links
 
@@ -67,15 +81,15 @@ functions:
       - sqs:
         arn:
           Fn::GetAtt: parseHtmlQueue.Arn
-          
+
 
 resources:
   Resources:
     getHtmlQueue:
       Type: 'AWS::SQS::Queue'
       Properties:
-        QueueName: '${self:service}-${self:provider.stage}-getHtmlQueue'
+        QueueName: '${self:custom.getHtmlQueueName}'
     parseHtmlQueue:
       Type: 'AWS::SQS::Queue'
       Properties:
-        QueueName: '${self:service}-${self:provider.stage}-parseHtmlQueue'
+        QueueName: '${self:custom.parseHtmlQueueName}'
