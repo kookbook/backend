@@ -17,16 +17,32 @@ provider:
     project: kookbook
     creator: Peter Pult
   iamRoleStatements:
-    - Effect: 'Allow'
+    - Effect: Allow
       Action:
-        - 'sqs:SendMessage'
+        - sqs:SendMessage
+        - sqs:GetQueueUrl
+        - sqs:ListQueues
       Resource:
-        Fn::GetAtt: getHtmlQueue.Arn
+        - Fn::GetAtt: getHtmlQueue.Arn
+        - Fn::GetAtt: parseHtmlQueue.Arn
+    - Effect: Allow
+      Action:
+        - dynamodb:GetItem
+        - dynamodb:UpdateItem
+        - dynamodb:PutItem
+      Resource:
+        Fn::GetAtt: recipeTable.Arn
+    - Effect: Allow
+      Action:
+        - s3:PutObject
+      Resource: 'arn:aws:s3:::${self:custom.htmlBucketName}/*'
 
 
 custom:
   getHtmlQueueName: '${self:service}-${self:provider.stage}-getHtmlQueue'
   parseHtmlQueueName: '${self:service}-${self:provider.stage}-parseHtmlQueue'
+  recipeTableName: '${self:service}-${self:provider.stage}-recipeTable'
+  htmlBucketName: '${self:service}-${self:provider.stage}-htmlbucket' # Can not use camel casing in bucket name.
 
 
 functions:
@@ -60,36 +76,60 @@ functions:
   links:
     handler: lib/links.handler
     description: Handles link adding.
-    environment:
-      SQS_URL:
-        Ref: getHtmlQueue
     events:
       - http: post links
+    environment:
+      GET_QUEUE_URL:
+        Ref: getHtmlQueue
+      RECIPE_TABLE:
+        Ref: recipeTable
 
   getHtml:
     handler: lib/getHtml.handler
     description: Get raw HTML code from url.
     events:
       - sqs:
-        arn:
-          Fn::GetAtt: getHtmlQueue.Arn
+          arn:
+            Fn::GetAtt: getHtmlQueue.Arn
+    environment:
+      PARSE_QUEUE_URL:
+        Ref: parseHtmlQueue
+      HTML_BUCKET_NAME:
+        Ref: htmlBucket
 
   parseHtml:
     handler: lib/parseHtml.handler
     description: Parse raw HTML code to recipe object.
     events:
       - sqs:
-        arn:
-          Fn::GetAtt: parseHtmlQueue.Arn
+          arn:
+            Fn::GetAtt: parseHtmlQueue.Arn
 
 
 resources:
   Resources:
+    htmlBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: '${self:custom.htmlBucketName}'
     getHtmlQueue:
-      Type: 'AWS::SQS::Queue'
+      Type: AWS::SQS::Queue
       Properties:
         QueueName: '${self:custom.getHtmlQueueName}'
     parseHtmlQueue:
-      Type: 'AWS::SQS::Queue'
+      Type: AWS::SQS::Queue
       Properties:
         QueueName: '${self:custom.parseHtmlQueueName}'
+    recipeTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: sourceUrl
+            AttributeType: S
+        KeySchema:
+          - AttributeName: sourceUrl
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: '${self:custom.recipeTableName}'
