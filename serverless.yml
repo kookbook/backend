@@ -11,7 +11,7 @@ provider:
   name: aws
   runtime: nodejs8.10
   stage: dev
-  region: eu-central-1
+  region: eu-west-1
   profile: netlight
   tags:
     project: kookbook
@@ -35,6 +35,7 @@ provider:
     - Effect: Allow
       Action:
         - s3:PutObject
+        - s3:GetObject
       Resource: 'arn:aws:s3:::${self:custom.htmlBucketName}/*'
 
 
@@ -42,7 +43,7 @@ custom:
   getHtmlQueueName: '${self:service}-${self:provider.stage}-getHtmlQueue'
   parseHtmlQueueName: '${self:service}-${self:provider.stage}-parseHtmlQueue'
   recipeTableName: '${self:service}-${self:provider.stage}-recipeTable'
-  htmlBucketName: '${self:service}-${self:provider.stage}-htmlbucket' # Can not use camel casing in bucket name.
+  htmlBucketName: '${self:service}-${self:provider.stage}-html-bucket' # Can not use camel casing in bucket name.
 
 
 functions:
@@ -104,6 +105,9 @@ functions:
       - sqs:
           arn:
             Fn::GetAtt: parseHtmlQueue.Arn
+    environment:
+      RECIPE_TABLE:
+        Ref: recipeTable
 
 
 resources:
